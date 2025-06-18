@@ -1,40 +1,52 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.SemanticKernel;
+﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using DotNetEnv;
 using Microsoft.Extensions.Configuration;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using semantic_kernel.Configuration;
+using semantic_kernel.Plugin;
 
-Console.WriteLine("[AppConfig] Loading the application configuration...");
+Console.WriteLine("[Program] Loading the application configuration...");
 
 // Bind configuration to AppConfig class
 var appConfig = LoadAppConfig();
 
 
 
-
+//Create the Kernel builder and add Azure OpenAI Chat Completion service
 var builder = Kernel.CreateBuilder();
 builder.AddAzureOpenAIChatCompletion(
     deploymentName: appConfig.OpenAi.DeploymentName,
     endpoint: appConfig.OpenAi.ApiEndpoint,
     apiKey: appConfig.OpenAi.ApiKey
 );
-
 var kernel = builder.Build();
+
+// Register plugins
+Console.WriteLine("[Program] Registering DynamicQuery plugin...");
+
+
+//kernel.Plugins.Add(KernelPluginFactory.CreateFromObject(new RunTimeQueryPlugin(), "RunTimeQuery"));
+kernel.Plugins.AddFromType<CompanyPlugin>("Company");
+kernel.Plugins.AddFromType<WorkerPlugin>("Worker");
+kernel.Plugins.AddFromType<FormPlugin>("Form");
+kernel.Plugins.AddFromType<MusicPlugin>("Music");
+OpenAIPromptExecutionSettings openAiPromptExecutionSettings = new()
+{
+    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+};
 var chatService = kernel.GetRequiredService<IChatCompletionService>();
 
-var chatHistory = new ChatHistory();
-chatHistory.AddSystemMessage("You're a helpful assistant");
-
+var history = new ChatHistory();
 while (true) 
 {
     Console.Write("User: ");
-    chatHistory.AddUserMessage(Console.ReadLine()!);
-    
-    var response = await chatService.GetChatMessageContentsAsync(chatHistory);
-    Console.WriteLine($"Assistant: {response[^1].Content}");
-    
-    chatHistory.AddAssistantMessage(response[^1].Content!);
+    var input = Console.ReadLine();
+    history.AddUserMessage(input);
+    var result = await chatService.GetChatMessageContentsAsync(
+        history,
+        executionSettings: openAiPromptExecutionSettings,
+        kernel: kernel);
+    Console.WriteLine($"AI: {result[^1].Content}");
 }
 
 
@@ -55,3 +67,4 @@ static AppConfig LoadAppConfig()
     //TODO: validate the configuration
     return appConfig;
 }
+
