@@ -7,6 +7,10 @@
 This project is a **chat assistant** built using the **Microsoft Semantic Kernel** framework. It integrates with **Azure OpenAI** services to provide intelligent conversational capabilities.  
 👨‍💻 ☁️ ⚛️
 
+## How it works:
+
+[![Example](https://img.youtube.com/vi/HC8f0mpYa3M/0.jpg)](https://www.youtube.com/watch?v=HC8f0mpYa3M "Example")
+
 ## How to Run the Project
 
 1. **Clone the Repository** 🛠️
@@ -44,3 +48,7 @@ dotnet restore
 ```bash
    dotnet run
 ```
+
+### References:
+* [@daraujo85](https://github.com/daraujo85/poc-semantic-kernel).
+* [@DevLeader](https://www.youtube.com/@DevLeader)
